@@ -1,0 +1,67 @@
+ "use strict"; 
+
+        // Función para obtener el color del CSS remoto y aplicarlo a varios elementos
+        function getCssColor(url, selector, property) {
+            const selectorSubNavBar = '.sub-navbar';
+            const propiedadSubNavBar = 'background';
+            fetch(url)
+                .then(response => response.text())
+                .then(css => {
+                    // Expresión regular para encontrar el valor de la propiedad en el selector
+                    const regex = new RegExp(`${selector}\\s*{[^}]*?${property}\\s*:\\s*(#[a-fA-F0-9]{3,6}|rgba?\\([^)]*\\))`, 'i');
+                    const regexSubNavBar = new RegExp(`${selectorSubNavBar}\\s*{[^}]*?${propiedadSubNavBar}\\s*:\\s*(#[a-fA-F0-9]{3,6}|rgba?\\([^)]*\\))`, 'i');
+                    const match = css.match(regex);
+                    const color = match[1];
+                    const matchSubNavBar = css.match(regexSubNavBar);
+                    const colorSubNavBar = matchSubNavBar[1];
+
+
+                    // Aplicar color a los elementos del navbar
+
+                    document.querySelectorAll('.navbar-inverse:not(.sub-navbar').forEach(nav => {
+                        nav.style.setProperty('background-color', color, 'important');
+                    });
+
+                    document.querySelectorAll('.navbar:not(.sub-navbar) > .container > .navbar-collapse').forEach(el => {
+                        el.style.setProperty('background-color', color, 'important');
+                    });
+
+
+                    document.querySelectorAll('.sub-navbar').forEach(nav => {
+                        nav.style.setProperty('background-color', colorSubNavBar, 'important');
+                    });
+
+
+
+
+                    const footer = document.querySelector('.main-footer');
+                    if (footer) {
+                        footer.style.setProperty('background-color', color, 'important');
+                        console.log(`Color aplicado directamente al footer: ${color}`);
+                    } else {
+                        // Usar observer si el footer aún no está en el DOM
+                        const footerObserver = new MutationObserver((mutationsList, observer) => {
+                            for (const mutation of mutationsList) {
+                                if (mutation.type === 'childList') {
+                                    const footer = document.querySelector('.main-footer');
+                                    if (footer) {
+                                        observer.disconnect();
+                                        footer.style.setProperty('background-color', color, 'important');
+                                    }
+                                }
+                            }
+                        });
+
+                        footerObserver.observe(document.body, { childList: true, subtree: true });
+                    }
+
+                })
+                .catch(error => console.error('Error al obtener el archivo CSS:', error));
+        }
+
+        // Llamada a la función con la URL del CSS, el selector y la propiedad
+        getCssColor(
+            window.urlCssv3,
+            '.navbar-inverse',
+            'background-color'
+        );
